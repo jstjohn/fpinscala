@@ -17,7 +17,7 @@ object Tree {
   }
   
   def depth[A](t: Tree[A]): Int = t match{
-    case Leaf(_) => 1
+    case Leaf(_) => 0
     case Branch(l,r) => (1+depth(l)) max (1+depth(r))
   }
   
@@ -34,9 +34,11 @@ object Tree {
   def sizeViaFold[A](t: Tree[A]): Int = 
     fold(t)(a => 1)(1 + _ + _)
 
-  def maximumViaFold[T](t: Tree[T])(implicit ev: Numeric[T]): T = sys.error("todo")
+  def maximumViaFold(t: Tree[Int]):Int =
+    fold(t)(a => a)((a,b)=>if(a > b)a else b)
 
-  def depthViaFold[A](t: Tree[A]): Int = sys.error("todo")
+  def depthViaFold[A](t: Tree[A]): Int =
+    fold(t)(a => 0)((a,b)=>(1 + a) max (1 + b))
   
 }
 

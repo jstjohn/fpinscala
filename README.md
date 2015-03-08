@@ -47,6 +47,14 @@ to get a Scala REPL with access to your exercises, and
 
     > run
 
+to run Scala test suite for a particular file, you can execute only those tests like:
+
+    > testOnly fpinscala.datastructures.TreeSpec
+
+Otherwise to run all tests, you can simply do:
+
+    > test
+
 To get a menu of possible main methods to execute.
 
 To create project files for the eclipse IDE you can install the [sbteclipse](https://github.com/typesafehub/sbteclipse) [sbt](http://scala-sbt.org) plugin.
