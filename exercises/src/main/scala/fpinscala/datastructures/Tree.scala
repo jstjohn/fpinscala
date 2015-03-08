@@ -26,7 +26,10 @@ object Tree {
     case Branch(l,r) => Branch(map(l)(f), map(r)(f))
   }
 
-  def fold[A,B](t: Tree[A])(f: A => B)(g: (B,B) => B): B = sys.error("todo")
+  def fold[A,B](t: Tree[A])(f: A => B)(g: (B,B) => B): B = t match {
+    case Leaf(l) => f(l)
+    case Branch(l,r) => g(fold(l)(f)(g),fold(r)(f)(g))
+  }
 
   def sizeViaFold[A](t: Tree[A]): Int = 
     fold(t)(a => 1)(1 + _ + _)
