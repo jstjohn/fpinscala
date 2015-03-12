@@ -65,5 +65,8 @@ object Option {
   
   def sequence[A](a: List[Option[A]]): Option[List[A]] = a.foldRight(Some(Nil):Option[List[A]])(map2(_,_)((x,y) => x::y) )
 
-  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = a.foldRight(Some(Nil):Option[List[B]])((x,y) => {map2(f(x), y)((u,v) => u::v)})
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = a.foldRight(Some(Nil):Option[List[B]])((x,y) => {
+      map2(f(x), y)((u,v) => u::v)
+    }
+  )
 }
