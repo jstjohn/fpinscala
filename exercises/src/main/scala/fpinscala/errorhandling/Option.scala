@@ -1,18 +1,30 @@
 package fpinscala.errorhandling
 
-
+import scala.math.pow
 import scala.{Option => _, Some => _, Either => _, _} // hide std library `Option`, `Some` and `Either`, since we are writing our own in this chapter
 
 sealed trait Option[+A] {
-  def map[B](f: A => B): Option[B] = sys.error("todo")
+  def map[B](f: A => B): Option[B] = this match {
+    case None => None
+    case Some(a) => Some(f(a))
+  }
+    
 
-  def getOrElse[B>:A](default: => B): B = sys.error("todo")
+  def getOrElse[B>:A](default: => B): B = this match {
+    case None => default
+    case Some(b) => b
+  }
 
-  def flatMap[B](f: A => Option[B]): Option[B] = sys.error("todo")
+  def flatMap[B](f: A => Option[B]): Option[B] = 
+    map(f) getOrElse None
 
-  def orElse[B>:A](ob: => Option[B]): Option[B] = sys.error("todo")
+  def orElse[B>:A](ob: => Option[B]): Option[B] = this match {
+    case None => ob
+    case Some(_) => this
+  }
 
-  def filter(f: A => Boolean): Option[A] = sys.error("todo")
+  def filter(f: A => Boolean): Option[A] = 
+    if (map(f) getOrElse false) this else None
 }
 case class Some[+A](get: A) extends Option[A]
 case object None extends Option[Nothing]
@@ -38,11 +50,20 @@ object Option {
   def mean(xs: Seq[Double]): Option[Double] =
     if (xs.isEmpty) None
     else Some(xs.sum / xs.length)
-  def variance(xs: Seq[Double]): Option[Double] = sys.error("todo")
+  
+  // this function uses flatmap to optionally get the mean, then if that is successful
+  // 
+  def variance(xs: Seq[Double]): Option[Double] = 
+    mean(xs).flatMap(m => mean(xs.map(x => pow(x-m, 2))))
+    
 
-  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = sys.error("todo")
+  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = (a,b) match {
+      case (Some(x),Some(y)) => Some(f(x,y))
+      case _ => None
+    }
+  
+  
+  def sequence[A](a: List[Option[A]]): Option[List[A]] = a.foldRight(Some(Nil):Option[List[A]])(map2(_,_)((x,y) => x::y) )
 
-  def sequence[A](a: List[Option[A]]): Option[List[A]] = sys.error("todo")
-
-  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = sys.error("todo")
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = a.foldRight(Some(Nil):Option[List[B]])((x,y) => {map2(f(x), y)((u,v) => u::v)})
 }
