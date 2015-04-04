@@ -29,7 +29,12 @@ trait Stream[+A] {
       case _ => this
     }
 
-  def takeViaUnfold(n: Int): Stream[A] = sys.error("todo")
+  def takeViaUnfold(n: Int): Stream[A] = 
+    unfold((n,this))(s => s match {
+      case (0, _) => None
+      case (_, empty) => None
+      case (m, Cons(h,t)) => Some(h(), (m-1, t()))
+    })
   
   @annotation.tailrec
   final def drop(n: Int): Stream[A] =
@@ -44,7 +49,11 @@ trait Stream[+A] {
   def takeWhile(p: A => Boolean): Stream[A] = 
     foldRight(empty:Stream[A])((a,b)=> if(p(a)) cons(a,b) else empty)
   
-  def takeWhileViaUnfold(p: A => Boolean): Stream[A] = sys.error("todo")
+  def takeWhileViaUnfold(p: A => Boolean): Stream[A] = 
+    unfold(this)(s => s match{
+      case Cons(h,t) => if(p(h())) Some(h(),t()) else None
+      case empty => None
+    })
 
   def forAll(p: A => Boolean): Boolean = 
     foldRight(true)((a, b) => p(a) && b)
@@ -58,7 +67,11 @@ trait Stream[+A] {
   def map[B](f: A => B): Stream[B] = 
     foldRight(empty:Stream[B])((h,t) => cons(f(h),t))
 
-  def mapViaUnfold[B](f: A => B): Stream[B] = sys.error("todo")
+  def mapViaUnfold[B](f: A => B): Stream[B] = 
+    unfold(this)(a => a match{
+      case Cons(h,t) => Some( f(h()), t() )
+      case empty => None
+    })
 
   def filter(p: A => Boolean): Stream[A] = 
     foldRight(empty:Stream[A])((h,t) => if(p(h)) cons(h,t) else t)
@@ -71,7 +84,13 @@ trait Stream[+A] {
 
   def zipWith[B,C](s2: Stream[B])(f: (A,B) => C): Stream[C] = sys.error("todo")
 
-  def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = sys.error("todo")
+  def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = 
+    unfold((this,s2))(s => s match {
+      case (Cons(h1,t1), empty) => Some((Some(h1()),None),(t1(), empty))
+      case (empty, Cons(h2,t2)) => Some((None,Some(h2())),(empty, t2()))
+      case (Cons(h1,t1), Cons(h2,t2)) => Some((Some(h1()),Some(h2())),(t1(), t2()))
+      case (_,_) => None
+    })
 
   def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
 
@@ -113,11 +132,14 @@ object Stream {
       case None => empty
     }
 
-  lazy val fibsViaUnfold: Stream[Int] = unfold((0,1))(s => Some(s._1, (s._2, s._1+s._2)))
+  lazy val fibsViaUnfold: Stream[Int] = 
+    unfold((0,1))(s => Some(s._1, (s._2, s._1+s._2)))
 
-  def fromViaUnfold(n: Int): Stream[Int] = sys.error("todo")
+  def fromViaUnfold(n: Int): Stream[Int] = 
+    unfold(n)(m => Some(m, m+1))
 
-  def constantViaUnfold[A](a: A): Stream[A] = sys.error("todo")
+  def constantViaUnfold[A](a: A): Stream[A] = 
+    unfold(a)(Some(_,a))
 
-  lazy val onesViaUnfold: Stream[Int] = sys.error("todo")
+  lazy val onesViaUnfold: Stream[Int] = unfold(1)(Some(_,1))
 }
