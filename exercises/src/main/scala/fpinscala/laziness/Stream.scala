@@ -32,8 +32,8 @@ trait Stream[+A] {
   def takeViaUnfold(n: Int): Stream[A] = 
     unfold((n,this))(s => s match {
       case (0, _) => None
-      case (_, empty) => None
       case (m, Cons(h,t)) => Some(h(), (m-1, t()))
+      case (_, empty) => None
     })
   
   @annotation.tailrec
@@ -82,17 +82,27 @@ trait Stream[+A] {
   def flatMap[B](f: A => Stream[B]): Stream[B] = 
     foldRight(empty:Stream[B])((h,t) => f(h).append(t))
 
-  def zipWith[B,C](s2: Stream[B])(f: (A,B) => C): Stream[C] = sys.error("todo")
+  def zipWith[B,C](s2: Stream[B])(f: (A,B) => C): Stream[C] = 
+    unfold((this,s2))(s => s match {
+      case (Cons(h1,t1),Cons(h2,t2)) => Some(f(h1(),h2()), (t1(),t2()))
+      case _ => None
+    })
 
   def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = 
     unfold((this,s2))(s => s match {
+      case (Cons(h1,t1), Cons(h2,t2)) => Some((Some(h1()),Some(h2())),(t1(), t2()))
       case (Cons(h1,t1), empty) => Some((Some(h1()),None),(t1(), empty))
       case (empty, Cons(h2,t2)) => Some((None,Some(h2())),(empty, t2()))
-      case (Cons(h1,t1), Cons(h2,t2)) => Some((Some(h1()),Some(h2())),(t1(), t2()))
-      case (_,_) => None
+      case _ => None
     })
-
-  def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
+  
+  
+  def startsWith[B](s: Stream[B]): Boolean = 
+    this.zipAll(s).forAll(s=> s match {
+      case (Some(a),Some(b)) => a == b
+      case (Some(a),None) => true
+      case _ => false
+    })
 
   def tails: Stream[Stream[A]] = sys.error("todo using unfold")
 
