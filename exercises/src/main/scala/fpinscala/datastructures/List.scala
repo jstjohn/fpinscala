@@ -50,49 +50,86 @@ object List { // `List` companion object. Contains functions for creating and wo
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
 
-  def tail[A](l: List[A]): List[A] = sys.error("todo")
+  def tail[A](l: List[A]): List[A] = l match {
+    case Cons(h,t) => t
+  }
 
-  def setHead[A](l: List[A], h: A): List[A] = sys.error("todo")
+  def setHead[A](l: List[A], h: A): List[A] = Cons(h, tail(l))
+  
+  @annotation.tailrec
+  def drop[A](l: List[A], n: Int): List[A] = if(n <= 0) l else l match {
+    case Cons(h,t) => drop(t,n-1)
+    case Nil => Nil 
+  }
 
-  def drop[A](l: List[A], n: Int): List[A] = sys.error("todo")
+  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = l match {
+    case Cons(h,t) => if(f(h)) dropWhile(t,f) else l
+    case Nil => Nil
+  }
 
-  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = sys.error("todo")
+  def init[A](l: List[A]): List[A] = l match {
+    case Cons(h, Nil) => Nil
+    case Cons(h,t) => Cons(h,init(t))
+  }
 
-  def init[A](l: List[A]): List[A] = sys.error("todo")
+  def length[A](l: List[A]): Int = foldRight(l, 0)((a:A, b:Int) => b+1)
+  
+  @annotation.tailrec
+  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = l match {
+      case Nil => z
+      case Cons(x, xs) => foldLeft(xs, f(z, x))(f)
+  }
 
-  def length[A](l: List[A]): Int = sys.error("todo")
+  def sumViaFoldLeft(nums: List[Int]): Int = foldLeft(nums,0)(_+_)
 
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = sys.error("todo")
+  def productViaFoldLeft(nums: List[Double]): Double = foldLeft(nums,1.0)(_*_)
 
-  def sumViaFoldLeft(nums: List[Int]): Int = sys.error("todo")
+  def lengthViaFoldLeft(l: List[_]): Int = foldLeft(l,0)((b,a)=>b+1)
 
-  def productViaFoldLeft(nums: List[Double]): Double = sys.error("todo")
+  def reverse[A](l: List[A]): List[A] = foldLeft(l, Nil:List[A])((b:List[A], a:A) => Cons(a,b))
 
-  def lengthViaFoldLeft(l: List[_]): Int = sys.error("todo")
+  def appendViaFoldRight[A](l1: List[A], l2: List[A]): List[A] = foldRight(l1,l2)((a:A, b:List[A]) => Cons(a,b))
 
-  def reverse[A](l: List[A]): List[A] = sys.error("todo")
+  def appendViaFoldLeft[A](a1: List[A], a2: List[A]): List[A] = foldLeft(reverse(a1),a2)((b:List[A], a:A) => Cons(a,b) )
+  
+  def foldRightViaFoldLeft[A,B](as: List[A], z: B)(f: (A, B) => B): B = 
+    foldLeft(reverse(as),z)((b,a)=>f(a,b))
+  
+  def concat[A](l: List[List[A]]): List[A] = foldRightViaFoldLeft(l, Nil:List[A])(appendViaFoldLeft(_,_))
 
-  def appendViaFoldRight[A](l1: List[A], l2: List[A]): List[A] = sys.error("todo")
+  def add1(nums: List[Int]): List[Int] = map(nums)(_+1)
 
-  def appendViaFoldLeft[A](a1: List[A], a2: List[A]): List[A] = sys.error("todo")
+  def doubleToString(l: List[Double]): List[String] = map(l)(_.toString)
 
-  def concat[A](l: List[List[A]]): List[A] = sys.error("todo")
+  def map[A,B](l: List[A])(f: A => B): List[B] = 
+    foldRightViaFoldLeft(l, Nil:List[B])((a,b)=>Cons(f(a), b))
 
-  def add1(nums: List[Int]): List[Int] = sys.error("todo")
+  def filter[A](l: List[A])(f: A => Boolean): List[A] = 
+    foldRightViaFoldLeft(l, Nil:List[A])((a,b)=>if(f(a)) Cons(a,b) else b)
 
-  def doubleToString(l: List[Double]): List[String] = sys.error("todo")
+  def flatMap[A,B](l: List[A])(f: A => List[B]): List[B] = 
+    foldRightViaFoldLeft(l, Nil:List[B])((a,b)=>appendViaFoldLeft(f(a),b))
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = sys.error("todo")
+  def filterViaFlatMap[A](l: List[A])(f: A => Boolean): List[A] = 
+    flatMap(l)(a => if(f(a)) List(a) else Nil)
 
-  def filter[A](l: List[A])(f: A => Boolean): List[A] = sys.error("todo")
+  def addPairwise(a: List[Int], b: List[Int]): List[Int] = zipWith(a,b)(_+_)
 
-  def flatMap[A,B](l: List[A])(f: A => List[B]): List[B] = sys.error("todo")
-
-  def filterViaFlatMap[A](l: List[A])(f: A => Boolean): List[A] = sys.error("todo")
-
-  def addPairwise(a: List[Int], b: List[Int]): List[Int] = sys.error("todo")
-
-  def zipWith[A,B,C](a: List[A], b: List[B])(f: (A,B) => C): List[C] = sys.error("todo")
-
-  def hasSubsequence[A](l: List[A], sub: List[A]): Boolean = sys.error("todo")
+  def zipWith[A,B,C](a: List[A], b: List[B])(f: (A,B) => C): List[C] = (a,b) match {
+    case (_, Nil) => Nil
+    case (Nil, _) => Nil
+    case (Cons(ah, at), Cons(bh, bt)) => Cons(f(ah,bh), zipWith(at,bt)(f))
+  }
+  
+  @annotation.tailrec
+  def subIsContained[A](l:List[A], sub:List[A]):Boolean = (l,sub) match {
+    case (_, Nil) => true
+    case (Nil, _) => false
+    case (Cons(ah, at), Cons(bh, bt)) => if(ah == bh) subIsContained(at,bt) else false
+  }
+  
+  def hasSubsequence[A](l: List[A], sub: List[A]): Boolean = if(subIsContained(l,sub)) true else l match{
+    case Cons(h,t) => hasSubsequence(t,sub)
+    case Nil => false
+  }
 }

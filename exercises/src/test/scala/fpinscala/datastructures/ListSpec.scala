@@ -453,7 +453,7 @@ class ListSpec extends FlatSpec with PropertyChecks {
 
     val tests = Table(
       ("l", "sub", "hasSubsequence(l, sub)"),
-      (Nil, Nil, false),
+      (Nil, Nil, true),
       (List(1, 2, 3, 4), Nil, true),
       (List(1, 2, 3, 4), List(1,2), true),
       (List(1, 2, 3, 4), List(2,3), true),
